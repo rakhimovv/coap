@@ -1,0 +1,69 @@
+defaults:
+  - _self_
+
+eval_only: false
+weights_path: ~
+
+dataset_folder: ${oc.env:DATASET_FOLDER}
+bm_path: ${oc.env:BM_PATH}
+
+sampling_config:
+  n_points_posed: 2048  # number of points sampled in the posed space
+  points_uniform_ratio: 0.5  # 50% of training points are sampled uniformly and 50% around the mesh surface
+  bbox_padding: 0  # padding for boxes around meshes
+  points_padding: 0.1  # padding for points
+  points_sigma: 0.01  # sampling std
+
+datasets:
+  train:
+    - dataset_name: movi_train
+      dataset_class:
+        _target_: coap.AmassDataset
+        dataset_folder: ${dataset_folder}
+        bm_path: ${bm_path}
+        split_file: ${dataset_folder}/split_movi_training.txt
+        sampling_config: ${sampling_config}
+  val:
+    - dataset_name: movi_val
+      dataset_class:
+        _target_: coap.AmassDataset
+        dataset_folder: ${dataset_folder}
+        bm_path: ${bm_path}
+        split_file: ${dataset_folder}/split_movi_validation.txt
+        sampling_config: ${sampling_config}
+  test:
+    - dataset_name: movi_train
+      dataset_class:
+        _target_: coap.AmassDataset
+        dataset_folder: ${dataset_folder}
+        bm_path: ${bm_path}
+        split_file: ${dataset_folder}/split_movi_training.txt
+        sampling_config: ${sampling_config}
+    - dataset_name: movi_val
+      dataset_class:
+        _target_: coap.AmassDataset
+        dataset_folder: ${dataset_folder}
+        bm_path: ${bm_path}
+        split_file: ${dataset_folder}/split_movi_validation.txt
+        sampling_config: ${sampling_config}
+
+dataloader:
+  num_workers: 2
+  pin_memory: false
+  total_batch_size: 8
+
+trainer:
+  strategy: ddp
+  accelerator: gpu
+  devices: 1
+  num_nodes: 1
+  num_sanity_val_steps: 0
+  max_epochs: 100
+  sync_batchnorm: True
+  reload_dataloaders_every_n_epochs: 1
+  fast_dev_run: False
+  benchmark: False
+  deterministic: False
+  log_every_n_steps: 20
+  limit_train_batches: 1000
+  limit_val_batches: 40
